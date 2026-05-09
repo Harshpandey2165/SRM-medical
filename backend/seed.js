@@ -10,19 +10,19 @@ import doctorModel from "./models/doctorModel.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cloudinary config
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET_KEY,
-});
+// Cloudinary config (skipped for now as per user request)
+// cloudinary.config({
+//     cloud_name: process.env.CLOUDINARY_NAME,
+//     api_key: process.env.CLOUDINARY_API_KEY,
+//     api_secret: process.env.CLOUDINARY_SECRET_KEY,
+// });
 
 const doctorsConfigPath = path.join(__dirname, 'doctors.json');
 const doctorsData = JSON.parse(fs.readFileSync(doctorsConfigPath, 'utf8'));
 
 const seedDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(process.env.MONGODB_URI + 'prescripto');
         console.log("Connected to MongoDB for seeding...");
 
         const salt = await bcrypt.genSalt(10);
@@ -40,13 +40,14 @@ const seedDB = async () => {
                 continue;
             }
 
-            console.log(`Uploading image for ${doc.name}...`);
-            const imageUpload = await cloudinary.uploader.upload(path.join(__dirname, doc.imagePath), { resource_type: "image" });
+            // Using placeholder image instead of Cloudinary upload
+            console.log(`Setting placeholder image for ${doc.name}...`);
+            const imageUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(doc.name)}`;
 
             const doctorData = {
                 name: doc.name,
                 email,
-                image: imageUpload.secure_url,
+                image: imageUrl,
                 password: hashedPassword,
                 speciality: doc.speciality,
                 degree: doc.degree,
