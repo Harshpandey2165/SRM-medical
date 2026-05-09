@@ -5,6 +5,67 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// API for seeding doctors data
+const seedDoctors = async (req, res) => {
+    try {
+        const doctorsConfigPath = path.join(__dirname, '../doctors.json');
+        const doctorsData = JSON.parse(fs.readFileSync(doctorsConfigPath, 'utf8'));
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash("12345678", salt);
+
+        let addedCount = 0;
+        let skippedCount = 0;
+
+        for (let i = 0; i < doctorsData.length; i++) {
+            const doc = doctorsData[i];
+            const email = `doc${i + 1}@prescripto.com`;
+
+            const exists = await doctorModel.findOne({ email });
+            if (exists) {
+                skippedCount++;
+                continue;
+            }
+
+            const imageUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(doc.name)}`;
+
+            const doctorData = {
+                name: doc.name,
+                email,
+                image: imageUrl,
+                password: hashedPassword,
+                speciality: doc.speciality,
+                degree: doc.degree,
+                experience: doc.experience,
+                about: doc.about,
+                fees: doc.fees,
+                address: doc.address,
+                date: Date.now()
+            };
+
+            const newDoctor = new doctorModel(doctorData);
+            await newDoctor.save();
+            addedCount++;
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Seeding complete. Added: ${addedCount}, Skipped: ${skippedCount}`,
+            total: doctorsData.length 
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -154,5 +215,6 @@ export {
     appointmentCancel,
     addDoctor,
     allDoctors,
-    adminDashboard
+    adminDashboard,
+    seedDoctors
 }
