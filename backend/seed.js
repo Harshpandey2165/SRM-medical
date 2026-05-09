@@ -22,7 +22,7 @@ const doctorsData = JSON.parse(fs.readFileSync(doctorsConfigPath, 'utf8'));
 
 const seedDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI + 'prescripto');
+        await mongoose.connect(`${process.env.MONGODB_URI}/prescripto`);
         console.log("Connected to MongoDB for seeding...");
 
         const salt = await bcrypt.genSalt(10);
